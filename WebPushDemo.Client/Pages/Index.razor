@@ -1,0 +1,36 @@
+﻿@page "/"
+@using WebPushDemo.Shared
+@inject HttpClient HttpClient
+@inject IJSRuntime JSRuntime
+
+<h1>Hello, world!</h1>
+
+Welcome to your new app.
+
+<SurveyPrompt Title="How is Blazor working for you?" />
+
+@if (_subscription != null)
+{
+    <label>@_subscription.NotificationSubscriptionId</label>
+}
+
+
+@code
+{
+    private NotificationSubscription _subscription;
+    protected override void OnInitialized()
+    {
+        // In the background, ask if they want to be notified about order updates
+        _ = RequestNotificationSubscriptionAsync();
+    }
+
+    async Task RequestNotificationSubscriptionAsync()
+    {
+        _subscription = await JSRuntime.InvokeAsync<NotificationSubscription>("blazorPushNotifications.requestSubscription");
+        if (_subscription != null)
+        {
+            var response = await HttpClient.PutAsJsonAsync("notifications/subscribe", _subscription);
+            response.EnsureSuccessStatusCode();
+        }
+    }
+}
